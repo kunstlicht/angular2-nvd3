@@ -84,8 +84,8 @@ export namespace Angular2NvD3 {
                     'yAxis1',
                     'yAxis2'
                 ].indexOf(key) >= 0 ||
-                // stacked is a component for stackedAreaChart, but a boolean for multiBarChart and multiBarHorizontalChart
-                (key === 'stacked' && options.chart.type === 'stackedAreaChart')) {
+                    // stacked is a component for stackedAreaChart, but a boolean for multiBarChart and multiBarHorizontalChart
+                    (key === 'stacked' && options.chart.type === 'stackedAreaChart')) {
                     this.configure(this.chart[key], options.chart[key], options.chart.type);
                 } else if ((key === 'xTickFormat' || key === 'yTickFormat') && options.chart.type === 'lineWithFocusChart') {
                     // TODO: need to fix bug in nvd3
@@ -96,6 +96,10 @@ export namespace Angular2NvD3 {
             }
 
             this.updateWithData(data, options);
+
+            if (options.ranges) {
+                this.drawRanges(options.chart, options.ranges);
+            }
 
             nv.addGraph(() => {
                 if (!self.chart) { return; }
@@ -112,6 +116,22 @@ export namespace Angular2NvD3 {
             }, options.chart['callback']);
         }
 
+        private drawRanges(chart: any, ranges: Array<{ intercept: number, stroke: { width: number, color: string } }>): void {
+            const svg = d3.select(this.el.nativeElement).select('svg');
+
+            ranges.forEach(range => {
+                svg.append('line')
+                    .attr({
+                        x1: 75 + this.chart.xAxis.scale()(0),
+                        y1: 30 + this.chart.yAxis.scale()(range.intercept),
+                        x2: 75 + this.chart.xAxis.scale()(chart.width),
+                        y2: 30 + this.chart.yAxis.scale()(range.intercept)
+                    })
+                    .attr('stroke-width', range.stroke.width)
+                    .style('stroke', range.stroke.color);
+            });
+        }
+
         private updateWithData(data: any, options: any) {
             if (data) {
                 // remove whole svg element with old data
@@ -123,13 +143,13 @@ export namespace Angular2NvD3 {
                 this.svg = d3.select(this.el.nativeElement).append('svg');
                 if (h = options.chart.height) {
                     if (!isNaN(+h)) { h += 'px'; }
-                    this.svg.attr('height', h).style({height: h});
+                    this.svg.attr('height', h).style({ height: h });
                 }
                 if (w = options.chart.width) {
                     if (!isNaN(+w)) { w += 'px'; }
-                    this.svg.attr('width', w).style({width: w});
+                    this.svg.attr('width', w).style({ width: w });
                 } else {
-                    this.svg.attr('width', '100%').style({width: '100%'});
+                    this.svg.attr('width', '100%').style({ width: '100%' });
                 }
 
                 this.svg.datum(data).call(this.chart);
